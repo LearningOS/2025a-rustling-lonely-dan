@@ -1,211 +1,79 @@
-use std::fmt::{self, Display, Formatter};
-use std::ptr::NonNull;
-
-#[derive(Debug)]
-struct Node<T> {
-    val: T,
-    next: Option<NonNull<Node<T>>>,
-    prev: Option<NonNull<Node<T>>>,
-}
-
-impl<T> Node<T> {
-    fn new(t: T) -> Node<T> {
-        Node {
-            val: t,
-            prev: None,
-            next: None,
-        }
+// 通用排序函数（快速排序实现）
+fn sort<T: Ord>(array: &mut [T]) {
+    // 基线条件：空切片或单元素切片无需排序
+    if array.len() <= 1 {
+        return;
     }
-}
 
-#[derive(Debug)]
-struct LinkedList<T> {
-    length: u32,
-    start: Option<NonNull<Node<T>>>,
-    end: Option<NonNull<Node<T>>>,
-}
+    // 选择第一个元素作为基准（pivot）
+    let pivot_idx = 0;
+    let mut left = 1;
+    let mut right = array.len() - 1;
 
-impl<T> Default for LinkedList<T> {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl<T> LinkedList<T> {
-    pub fn new() -> Self {
-        Self {
-            length: 0,
-            start: None,
-            end: None,
+    // 分区操作：将元素分为小于基准、等于基准、大于基准的三部分
+    while left <= right {
+        if array[left] <= array[pivot_idx] {
+            // 左指针右移，找大于基准的元素
+            left += 1;
+        } else if array[right] > array[pivot_idx] {
+            // 右指针左移，找小于等于基准的元素
+            right -= 1;
+        } else {
+            // 交换左右指针指向的元素
+            array.swap(left, right);
+            left += 1;
+            right -= 1;
         }
     }
 
-    pub fn add(&mut self, obj: T) {
-        let mut node = Box::new(Node::new(obj));
-        node.next = None;
-        node.prev = self.end;
-        // 安全：Box::into_raw 返回非空指针
-        let node_ptr = Some(unsafe { NonNull::new_unchecked(Box::into_raw(node)) });
-        match self.end {
-            None => self.start = node_ptr,
-            Some(end_ptr) => unsafe {
-                (*end_ptr.as_ptr()).next = node_ptr;
-            },
-        }
-        self.end = node_ptr;
-        self.length += 1;
-    }
+    // 将基准元素交换到正确的位置（右指针的位置）
+    array.swap(pivot_idx, right);
 
-    pub fn get(&mut self, index: i32) -> Option<&T> {
-        self.get_ith_node(self.start, index)
-    }
-
-    fn get_ith_node(&mut self, node: Option<NonNull<Node<T>>>, index: i32) -> Option<&T> {
-        match node {
-            None => None,
-            Some(next_ptr) => match index {
-                0 => Some(unsafe { &(*next_ptr.as_ptr()).val }),
-                _ => self.get_ith_node(unsafe { (*next_ptr.as_ptr()).next }, index - 1),
-            },
-        }
-    }
-
-    // 反转双向链表
-    pub fn reverse(&mut self) {
-        // 空链表或单节点链表直接返回
-        if self.length <= 1 {
-            return;
-        }
-
-        let mut current = self.start;
-        while let Some(cur_ptr) = current {
-            unsafe {
-                // 保存当前节点的next指针（避免反转后丢失）
-                let next = (*cur_ptr.as_ptr()).next;
-                // 交换当前节点的prev和next指针
-                (*cur_ptr.as_ptr()).next = (*cur_ptr.as_ptr()).prev;
-                (*cur_ptr.as_ptr()).prev = next;
-                // 移动到下一个节点（原next指针）
-                current = next;
-            }
-        }
-
-        // 交换链表的start和end指针
-        std::mem::swap(&mut self.start, &mut self.end);
-    }
-}
-
-impl<T> Display for LinkedList<T>
-where
-    T: Display,
-{
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        match self.start {
-            Some(node) => write!(f, "{}", unsafe { node.as_ref() }),
-            None => Ok(()),
-        }
-    }
-}
-
-impl<T> Display for Node<T>
-where
-    T: Display,
-{
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        match self.next {
-            Some(node) => write!(f, "{}, {}", self.val, unsafe { node.as_ref() }),
-            None => write!(f, "{}", self.val),
-        }
-    }
-}
-
-// 实现Drop trait，避免内存泄漏
-impl<T> Drop for LinkedList<T> {
-    fn drop(&mut self) {
-        let mut current = self.start;
-        while let Some(node) = current {
-            current = unsafe { (*node.as_ptr()).next };
-            // 安全：将NonNull转换回Box，自动释放内存
-            let _ = unsafe { Box::from_raw(node.as_ptr()) };
-        }
-    }
+    // 递归排序左半部分（小于基准）和右半部分（大于基准）
+    let (left_part, rest) = array.split_at_mut(right);
+    sort(left_part);
+    // rest 的第一个元素是基准，所以从第二个元素开始排序右半部分
+    sort(&mut rest[1..]);
 }
 
 #[cfg(test)]
 mod tests {
-    use super::LinkedList;
+    use super::*;
 
     #[test]
-    fn create_numeric_list() {
-        let mut list = LinkedList::<i32>::new();
-        list.add(1);
-        list.add(2);
-        list.add(3);
-        println!("Linked List is {}", list);
-        assert_eq!(3, list.length);
+    fn test_sort_1() {
+        let mut vec = vec![37, 73, 57, 75, 91, 19, 46, 64];
+        sort(&mut vec);
+        assert_eq!(vec, vec![19, 37, 46, 57, 64, 73, 75, 91]);
     }
 
     #[test]
-    fn create_string_list() {
-        let mut list_str = LinkedList::<String>::new();
-        list_str.add("A".to_string());
-        list_str.add("B".to_string());
-        list_str.add("C".to_string());
-        println!("Linked List is {}", list_str);
-        assert_eq!(3, list_str.length);
+    fn test_sort_2() {
+        let mut vec = vec![1];
+        sort(&mut vec);
+        assert_eq!(vec, vec![1]);
     }
 
     #[test]
-    fn test_reverse_linked_list_1() {
-        let mut list = LinkedList::<i32>::new();
-        let original_vec = vec![2, 3, 5, 11, 9, 7];
-        let reverse_vec = vec![7, 9, 11, 5, 3, 2];
-
-        for &i in &original_vec {
-            list.add(i);
-        }
-
-        println!("Linked List is {}", list);
-        list.reverse();
-        println!("Reversed Linked List is {}", list);
-
-        for i in 0..original_vec.len() {
-            assert_eq!(reverse_vec[i], *list.get(i as i32).unwrap());
-        }
+    fn test_sort_3() {
+        let mut vec = vec![99, 88, 77, 66, 55, 44, 33, 22, 11];
+        sort(&mut vec);
+        assert_eq!(vec, vec![11, 22, 33, 44, 55, 66, 77, 88, 99]);
     }
 
+    // 额外测试：空切片
     #[test]
-    fn test_reverse_linked_list_2() {
-        let mut list = LinkedList::<i32>::new();
-        let original_vec = vec![34, 56, 78, 25, 90, 10, 19, 34, 21, 45];
-        let reverse_vec = vec![45, 21, 34, 19, 10, 90, 25, 78, 56, 34];
-
-        for &i in &original_vec {
-            list.add(i);
-        }
-
-        println!("Linked List is {}", list);
-        list.reverse();
-        println!("Reversed Linked List is {}", list);
-
-        for i in 0..original_vec.len() {
-            assert_eq!(reverse_vec[i], *list.get(i as i32).unwrap());
-        }
+    fn test_sort_empty() {
+        let mut vec: Vec<i32> = vec![];
+        sort(&mut vec);
+        assert_eq!(vec, vec![]);
     }
 
+    // 额外测试：字符串切片
     #[test]
-    fn test_reverse_empty_list() {
-        let mut list = LinkedList::<i32>::new();
-        list.reverse();
-        assert_eq!(list.length, 0);
-        assert_eq!(list.get(0), None);
-    }
-
-    #[test]
-    fn test_reverse_single_node() {
-        let mut list = LinkedList::<i32>::new();
-        list.add(42);
-        list.reverse();
-        assert_eq!(*list.get(0).unwrap(), 42);
+    fn test_sort_strings() {
+        let mut vec = vec!["banana", "apple", "cherry", "date"];
+        sort(&mut vec);
+        assert_eq!(vec, vec!["apple", "banana", "cherry", "date"]);
     }
 }
