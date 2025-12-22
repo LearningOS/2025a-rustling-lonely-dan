@@ -1,13 +1,4 @@
-// structs2.rs
-//
-// Address all the TODOs to make the tests pass!
-//
-// Execute `rustlings hint structs2` or use the `hint` watch subcommand for a
-// hint.
-
-// I AM NOT DONE
-
-#[derive(Debug)]
+#[derive(Debug, PartialEq)] // 增加 PartialEq 以便断言比较（可选，测试中直接断言字段所以也可以不加）
 struct Order {
     name: String,
     year: u32,
@@ -37,8 +28,14 @@ mod tests {
     #[test]
     fn your_order() {
         let order_template = create_order_template();
-        // TODO: Create your own order using the update syntax and template above!
-        // let your_order =
+        // 使用结构体更新语法创建新的订单实例
+        let your_order = Order {
+            name: String::from("Hacker in Rust"), // 修改 name 字段
+            count: 1, // 修改 count 字段
+            ..order_template // 其余字段复用模板的值
+        };
+
+        // 断言验证字段值
         assert_eq!(your_order.name, "Hacker in Rust");
         assert_eq!(your_order.year, order_template.year);
         assert_eq!(your_order.made_by_phone, order_template.made_by_phone);
