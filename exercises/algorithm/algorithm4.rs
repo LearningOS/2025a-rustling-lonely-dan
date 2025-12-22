@@ -1,12 +1,5 @@
-/*
-	binary_search tree
-	This problem requires you to implement a basic interface for a binary tree
-*/
-
-//I AM NOT DONE
 use std::cmp::Ordering;
 use std::fmt::Debug;
-
 
 #[derive(Debug)]
 struct TreeNode<T>
@@ -37,39 +30,60 @@ where
             right: None,
         }
     }
+
+    // 递归插入节点到当前节点的子树中
+    fn insert(&mut self, value: T) {
+        match value.cmp(&self.value) {
+            // 小于当前值，插入左子树
+            Ordering::Less => {
+                match &mut self.left {
+                    Some(left_node) => left_node.insert(value),
+                    None => self.left = Some(Box::new(TreeNode::new(value))),
+                }
+            }
+            // 大于当前值，插入右子树
+            Ordering::Greater => {
+                match &mut self.right {
+                    Some(right_node) => right_node.insert(value),
+                    None => self.right = Some(Box::new(TreeNode::new(value))),
+                }
+            }
+            // 等于当前值，不插入重复值
+            Ordering::Equal => (),
+        }
+    }
+
+    // 递归查找值是否存在于当前节点的子树中
+    fn search(&self, value: &T) -> bool {
+        match value.cmp(&self.value) {
+            Ordering::Equal => true,
+            Ordering::Less => self.left.as_ref().map_or(false, |node| node.search(value)),
+            Ordering::Greater => self.right.as_ref().map_or(false, |node| node.search(value)),
+        }
+    }
 }
 
 impl<T> BinarySearchTree<T>
 where
     T: Ord,
 {
-
     fn new() -> Self {
         BinarySearchTree { root: None }
     }
 
-    // Insert a value into the BST
+    // 插入值到BST中
     fn insert(&mut self, value: T) {
-        //TODO
+        match &mut self.root {
+            Some(root_node) => root_node.insert(value),
+            None => self.root = Some(Box::new(TreeNode::new(value))),
+        }
     }
 
-    // Search for a value in the BST
+    // 查找值是否存在于BST中
     fn search(&self, value: T) -> bool {
-        //TODO
-        true
+        self.root.as_ref().map_or(false, |node| node.search(&value))
     }
 }
-
-impl<T> TreeNode<T>
-where
-    T: Ord,
-{
-    // Insert a node into the tree
-    fn insert(&mut self, value: T) {
-        //TODO
-    }
-}
-
 
 #[cfg(test)]
 mod tests {
@@ -79,24 +93,24 @@ mod tests {
     fn test_insert_and_search() {
         let mut bst = BinarySearchTree::new();
 
-        
+        // 初始状态查找不存在的值
         assert_eq!(bst.search(1), false);
 
-        
+        // 插入多个值
         bst.insert(5);
         bst.insert(3);
         bst.insert(7);
         bst.insert(2);
         bst.insert(4);
 
-        
+        // 查找存在的值
         assert_eq!(bst.search(5), true);
         assert_eq!(bst.search(3), true);
         assert_eq!(bst.search(7), true);
         assert_eq!(bst.search(2), true);
         assert_eq!(bst.search(4), true);
 
-        
+        // 查找不存在的值
         assert_eq!(bst.search(1), false);
         assert_eq!(bst.search(6), false);
     }
@@ -105,22 +119,20 @@ mod tests {
     fn test_insert_duplicate() {
         let mut bst = BinarySearchTree::new();
 
-        
+        // 插入重复值
         bst.insert(1);
         bst.insert(1);
 
-        
+        // 验证值存在
         assert_eq!(bst.search(1), true);
 
-        
+        // 验证根节点没有子节点（重复值未插入）
         match bst.root {
             Some(ref node) => {
                 assert!(node.left.is_none());
                 assert!(node.right.is_none());
-            },
+            }
             None => panic!("Root should not be None after insertion"),
         }
     }
-}    
-
-
+}
