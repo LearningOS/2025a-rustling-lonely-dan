@@ -1,22 +1,20 @@
-// move_semantics2.rs
-//
-// Expected output:
-// vec0 has length 3, with contents `[22, 44, 66]`
-// vec1 has length 4, with contents `[22, 44, 66, 88]`
-//
-// Execute `rustlings hint move_semantics2` or use the `hint` watch subcommand
-// for a hint.
-
-
 fn main() {
+    // 初始为空向量
     let vec0 = Vec::new();
 
-    let mut vec1 = fill_vec(vec0.clone());
+    // 调用 fill_vec，获取修改后的向量并赋值给 vec0（所有权转移）
+    let vec0 = fill_vec(vec0);
 
+    // 克隆 vec0 得到 vec1，避免所有权移动，以便后续使用 vec0
+    let mut vec1 = vec0.clone();
+
+    // 打印 vec0 的信息（预期长度 3，内容 [22,44,66]）
     println!("{} has length {}, with contents: `{:?}`", "vec0", vec0.len(), vec0);
 
+    // 给 vec1 追加 88
     vec1.push(88);
 
+    // 打印 vec1 的信息（预期长度 4，内容 [22,44,66,88]）
     println!("{} has length {}, with contents `{:?}`", "vec1", vec1.len(), vec1);
 }
 
