@@ -1,29 +1,33 @@
-// traits2.rs
-//
-// Your task is to implement the trait `AppendBar` for a vector of strings. To
-// implement this trait, consider for a moment what it means to 'append "Bar"'
-// to a vector of strings.
-//
-// No boiler plate code this time, you can do this!
-//
-// Execute `rustlings hint traits2` or use the `hint` watch subcommand for a hint.
+use std::sync::{Arc, Mutex};
+use std::thread;
+use std::time::Duration;
 
-// I AM NOT DONE
-
-trait AppendBar {
-    fn append_bar(self) -> Self;
+struct JobStatus {
+    jobs_completed: u32,
 }
 
-// TODO: Implement trait `AppendBar` for a vector of strings.
+fn main() {
+    // 用 Arc<Mutex<JobStatus>> 包装共享数据
+    let status = Arc::new(Mutex::new(JobStatus { jobs_completed: 0 }));
+    let mut handles = vec![];
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn is_vec_pop_eq_bar() {
-        let mut foo = vec![String::from("Foo")].append_bar();
-        assert_eq!(foo.pop().unwrap(), String::from("Bar"));
-        assert_eq!(foo.pop().unwrap(), String::from("Foo"));
+    for _ in 0..10 {
+        let status_shared = Arc::clone(&status);
+        let handle = thread::spawn(move || {
+            thread::sleep(Duration::from_millis(250));
+            // 获取互斥锁并修改共享变量（lock() 返回 Result，unwrap() 处理正常情况）
+            let mut status = status_shared.lock().unwrap();
+            status.jobs_completed += 1;
+        });
+        handles.push(handle);
     }
+
+    // 等待所有线程完成
+    for handle in handles {
+        handle.join().unwrap();
+    }
+
+    // 获取锁并输出最终的 jobs_completed 值
+    let final_status = status.lock().unwrap();
+    println!("jobs completed {}", final_status.jobs_completed);
 }
