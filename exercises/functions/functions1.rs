@@ -1,13 +1,8 @@
-// functions1.rs
-//
-// Execute `rustlings hint functions1` or use the `hint` watch subcommand for a
-// hint.
-
-
 fn main() {
     call_me();
 }
 
 fn call_me() {
-
+    // 添加输出语句，让函数有实际行为
+    println!("I was called!");
 }
