@@ -1,38 +1,25 @@
-// iterators2.rs
-//
-// In this exercise, you'll learn some of the unique advantages that iterators
-// can offer. Follow the steps to complete the exercise.
-//
-// Execute `rustlings hint iterators2` or use the `hint` watch subcommand for a
-// hint.
-
-// I AM NOT DONE
-
-// Step 1.
-// Complete the `capitalize_first` function.
-// "hello" -> "Hello"
+// Step 1. 实现首字符大写的函数
 pub fn capitalize_first(input: &str) -> String {
     let mut c = input.chars();
     match c.next() {
         None => String::new(),
-        Some(first) => ???,
+        Some(first) => {
+            // 首字符大写，拼接剩余字符
+            first.to_uppercase().chain(c).collect()
+        },
     }
 }
 
-// Step 2.
-// Apply the `capitalize_first` function to a slice of string slices.
-// Return a vector of strings.
-// ["hello", "world"] -> ["Hello", "World"]
+// Step 2. 对切片中的每个字符串应用 capitalize_first，返回向量
 pub fn capitalize_words_vector(words: &[&str]) -> Vec<String> {
-    vec![]
+    // 迭代每个单词，应用函数，收集为向量
+    words.iter().map(|&word| capitalize_first(word)).collect()
 }
 
-// Step 3.
-// Apply the `capitalize_first` function again to a slice of string slices.
-// Return a single string.
-// ["hello", " ", "world"] -> "Hello World"
+// Step 3. 对切片中的每个字符串应用 capitalize_first，拼接为单个字符串
 pub fn capitalize_words_string(words: &[&str]) -> String {
-    String::new()
+    // 迭代每个单词，应用函数，拼接为字符串
+    words.iter().map(|&word| capitalize_first(word)).collect()
 }
 
 #[cfg(test)]
