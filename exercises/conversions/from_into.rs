@@ -1,13 +1,4 @@
-// from_into.rs
-//
-// The From trait is used for value-to-value conversions. If From is implemented
-// correctly for a type, the Into trait should work conversely. You can read
-// more about it at https://doc.rust-lang.org/std/convert/trait.From.html
-//
-// Execute `rustlings hint from_into` or use the `hint` watch subcommand for a
-// hint.
-
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 struct Person {
     name: String,
     age: usize,
@@ -24,26 +15,42 @@ impl Default for Person {
     }
 }
 
-// Your task is to complete this implementation in order for the line `let p =
-// Person::from("Mark,20")` to compile Please note that you'll need to parse the
-// age component into a `usize` with something like `"4".parse::<usize>()`. The
-// outcome of this needs to be handled appropriately.
-//
-// Steps:
-// 1. If the length of the provided string is 0, then return the default of
-//    Person.
-// 2. Split the given string on the commas present in it.
-// 3. Extract the first element from the split operation and use it as the name.
-// 4. If the name is empty, then return the default of Person.
-// 5. Extract the other element from the split operation and parse it into a
-//    `usize` as the age.
-// If while parsing the age, something goes wrong, then return the default of
-// Person Otherwise, then return an instantiated Person object with the results
-
-// I AM NOT DONE
-
+// Implement From<&str> for Person
 impl From<&str> for Person {
     fn from(s: &str) -> Person {
+        // 步骤1：空字符串返回默认
+        if s.is_empty() {
+            return Person::default();
+        }
+
+        // 步骤2：按逗号分割字符串
+        let parts: Vec<&str> = s.split(',').collect();
+
+        // 检查分割后的元素数量是否为2（否则返回默认）
+        if parts.len() != 2 {
+            return Person::default();
+        }
+
+        // 步骤3：提取姓名
+        let name = parts[0].trim(); // 可选：去除首尾空白，增强鲁棒性
+        // 步骤4：姓名为空返回默认
+        if name.is_empty() {
+            return Person::default();
+        }
+
+        // 步骤5：提取并解析年龄
+        let age_str = parts[1].trim();
+        let age = match age_str.parse::<usize>() {
+            Ok(num) => num,
+            // 解析失败返回默认
+            Err(_) => return Person::default(),
+        };
+
+        // 所有条件满足，返回实例化的Person
+        Person {
+            name: String::from(name),
+            age,
+        }
     }
 }
 
@@ -59,6 +66,7 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
+
     #[test]
     fn test_default() {
         // Test that the default person is 30 year old John
@@ -66,6 +74,7 @@ mod tests {
         assert_eq!(dp.name, "John");
         assert_eq!(dp.age, 30);
     }
+
     #[test]
     fn test_bad_convert() {
         // Test that John is returned when bad string is provided
@@ -73,6 +82,7 @@ mod tests {
         assert_eq!(p.name, "John");
         assert_eq!(p.age, 30);
     }
+
     #[test]
     fn test_good_convert() {
         // Test that "Mark,20" works
@@ -80,6 +90,7 @@ mod tests {
         assert_eq!(p.name, "Mark");
         assert_eq!(p.age, 20);
     }
+
     #[test]
     fn test_bad_age() {
         // Test that "Mark,twenty" will return the default person due to an
