@@ -11,7 +11,7 @@ mod my_module {
     pub fn transformer(input: &Vec<(String, Command)>) -> Vec<String> {
         // 初始化输出向量，存储转换后的字符串
         let mut output: Vec<String> = vec![];
-        for (string, command) in input.iter() {
+        for (string, command) in input {  // 优化：input 已是引用，无需再调用 .iter()
             // 根据命令类型处理字符串
             let result = match command {
                 Command::Uppercase => string.to_uppercase(),
@@ -32,7 +32,8 @@ mod tests {
 
     #[test]
     fn it_works() {
-        let output = transformer(vec![
+        // 修复核心问题：给 vec![] 加上 & 符号，转为 Vec 的引用
+        let output = transformer(&vec![
             ("hello".into(), Command::Uppercase),
             (" all roads lead to rome! ".into(), Command::Trim),
             ("foo".into(), Command::Append(1)),
@@ -41,6 +42,7 @@ mod tests {
         assert_eq!(output[0], "HELLO");
         assert_eq!(output[1], "all roads lead to rome!");
         assert_eq!(output[2], "foobar");
+        // 注意：bar + 5次bar = 6个bar（原bar + barbarbarbarbar）
         assert_eq!(output[3], "barbarbarbarbarbar");
     }
 }
