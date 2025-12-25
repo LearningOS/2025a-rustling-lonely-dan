@@ -1,3 +1,4 @@
+// 正确定义无参数声明式宏
 macro_rules! my_macro {
     () => {
         println!("Check out my macro!");
@@ -5,5 +6,6 @@ macro_rules! my_macro {
 }
 
 fn main() {
-    my_macro();
+    // 关键修复：宏调用必须加 ! 符号
+    my_macro!();
 }
